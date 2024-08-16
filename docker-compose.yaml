@@ -1,0 +1,37 @@
+services:
+  controler:
+    build:
+      context: ./controller
+      dockerfile: Dockerfile
+    container_name: controller-container
+    depends_on:
+      worker1:
+        condition: service_started
+      rabitmq-broker:
+        condition: service_healthy
+    networks:
+      - app-network
+  worker1:
+    build:
+      context: ./worker1
+      dockerfile: Dockerfile
+    container_name: worker1-container
+    depends_on:
+      rabitmq-broker:
+        condition: service_healthy
+    networks:
+      - app-network
+  rabitmq-broker:
+    image: rabbitmq:3
+    container_name: rabitmq-broker-container
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
