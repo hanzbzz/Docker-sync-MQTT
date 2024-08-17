@@ -4,7 +4,7 @@ from utils import print_now
 
 workers = ["worker1"]
 
-def response_callback(channel, method_frame, header_frame, body, responses, connection):
+def response_callback(channel, method_frame, header_frame, body, responses):
     body = body.decode()
     print_now(f"[*] RESPONSE: RECEIVE {body}")
     responses.append(body)
@@ -12,7 +12,14 @@ def response_callback(channel, method_frame, header_frame, body, responses, conn
     if responses == workers:
         print_now("[+] JOB finished")
         # stop consuming
-        connection.close()
+        channel.basic_cancel("tag")
+
+def start_job(channel, name):
+    channel.basic_publish(exchange='', routing_key='command', body=name)
+    print_now(f"[+] COMMAND: SEND {name}")
+    responses = []
+    channel.basic_consume(queue='response', on_message_callback=partial(response_callback, responses=responses) , auto_ack=True, consumer_tag="tag")
+    channel.start_consuming()
 
 def main():
     connection = pika.BlockingConnection(
@@ -23,12 +30,10 @@ def main():
     channel.queue_declare(queue='response')
 
     # start job1
-    channel.basic_publish(exchange='', routing_key='command', body='job1')
-    print_now("[+] COMMAND: SEND job1")
-
-    responses = []
-    channel.basic_consume(queue='response', on_message_callback=partial(response_callback, responses=responses, connection=connection) , auto_ack=True)
-    channel.start_consuming()
+    start_job(channel, "job1")
+    
+    # start job2
+    start_job(channel, "job2")
 
 import time
 
