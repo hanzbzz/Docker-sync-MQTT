@@ -1,6 +1,7 @@
 import pika
 import random
 import time
+from utils import print_now
 
 def job1():
     for i in range(5):
@@ -15,11 +16,11 @@ def main():
 
     def callback(ch, method, properties, body):
         body = body.decode()
-        print(f"[+] COMMAND: RECEIVE {body}")
+        print_now(f"[+] COMMAND: RECEIVE {body}")
         if body == "job1":
             job1()
             channel.basic_publish(exchange='', routing_key='response', body='worker1')
-            print("[*] RESPONSE: SEND job1")
+            print_now("[*] RESPONSE: SEND job1")
 
     channel.basic_consume(queue='command', on_message_callback=callback, auto_ack=True)
 
