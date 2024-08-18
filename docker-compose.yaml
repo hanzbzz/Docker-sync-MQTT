@@ -7,15 +7,59 @@ services:
     depends_on:
       worker1:
         condition: service_started
+      worker2:
+        condition: service_started
+      worker3:
+        condition: service_started
+      worker4:
+        condition: service_started
       rabitmq-broker:
         condition: service_healthy
     networks:
       - app-network
   worker1:
     build:
-      context: ./worker1
+      context: ./worker
       dockerfile: Dockerfile
     container_name: worker1-container
+    environment:
+      - name=worker1
+    depends_on:
+      rabitmq-broker:
+        condition: service_healthy
+    networks:
+      - app-network
+  worker2:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: worker2-container
+    environment:
+      - name=worker2
+    depends_on:
+      rabitmq-broker:
+        condition: service_healthy
+    networks:
+      - app-network
+  worker3:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: worker3-container
+    environment:
+      - name=worker3
+    depends_on:
+      rabitmq-broker:
+        condition: service_healthy
+    networks:
+      - app-network
+  worker4:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: worker4-container
+    environment:
+      - name=worker4
     depends_on:
       rabitmq-broker:
         condition: service_healthy
